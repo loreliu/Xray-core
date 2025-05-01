@@ -41,7 +41,9 @@ func (l *Loopback) Process(ctx context.Context, link *transport.Link, _ internet
 		dialDest := destination
 
 		content := new(session.Content)
-		content.SkipDNSResolve = true
+		// content.SkipDNSResolve = true
+		// https://github.com/XTLS/Xray-core/issues/998 https://github.com/v2fly/v2ray-core/issues/1691
+		content.SkipDNSResolve = false
 
 		ctx = session.ContextWithContent(ctx, content)
 
