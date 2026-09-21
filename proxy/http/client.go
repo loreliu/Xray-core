@@ -201,6 +201,28 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 		req.Header.Set(h.Key, h.Value)
 	}
 
+	// ★ 新增：Header 里显式带了 Host 时，优先采用它，不再用 target。
+	// 注意：CONNECT 的 Host 与请求行 authority 必须是同一个值，
+	// 所以 req.Host 和 req.URL.Host 要一起改，否则合规代理会忽略/拒绝。
+	// https://github.com/MetaCubeX/mihomo/issues/534
+	// https://github.com/MetaCubeX/mihomo/pull/535
+	// 但百度直连 HTTP CONNECT cloudnproxy.com:443 notls 不是标准的 RFC 实现，它不会拒绝 req.Host 和 req.URL.Host 不一致的请求。
+	// 另外注意标准的 Host 是由（域名/IP）地址和端口组成的，即 Host: name:port，如 Host: example.com:443，并非只有地址。
+	if v := req.Header.Get("Host"); v != "" {
+		v = strings.TrimSpace(v)
+		// CONNECT 要求 host:port，自定义 Host 缺端口时从原 target 继承端口
+		// if _, _, err := net.SplitHostPort(v); err != nil {
+		// 	if _, origPort, _ := net.SplitHostPort(target); origPort != "" {
+		// 		v = net.JoinHostPort(v, origPort)
+		// 	} else {
+		// 		v = net.JoinHostPort(v, "443")
+		// 	}
+		// }
+		req.Host = v        // Host 头
+		// req.URL.Host = v    // 请求行 CONNECT v ... （隧道目标随之改变）
+		req.Header.Del("Host") // 防止 H2 路径出现多余的 host 字段
+	}
+
 	connectHTTP1 := func(rawConn net.Conn) (net.Conn, error) {
 		req.Header.Set("Proxy-Connection", "Keep-Alive")
 
