@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"sync"
 	"text/template"
+	"strings"
 
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/buf"
@@ -209,10 +210,10 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 	// 但百度直连 HTTP CONNECT cloudnproxy.com:443 notls 不是标准的 RFC 实现，它不会拒绝 req.Host 和 req.URL.Host 不一致的请求。
 	// 另外注意标准的 Host 是由（域名/IP）地址和端口组成的，即 Host: name:port，如 Host: example.com:443，并非只有地址。
 	if v := req.Header.Get("Host"); v != "" {
-		v = strings.TrimSpace(v)
+		v = strings.TrimSpace(v)  // import ( "strings" )
 		// CONNECT 要求 host:port，自定义 Host 缺端口时从原 target 继承端口
 		// if _, _, err := net.SplitHostPort(v); err != nil {
-		// 	if _, origPort, _ := net.SplitHostPort(target); origPort != "" {
+		// 	if _, origPort, _ := net.SplitHostPort(target); origPort != "" {  // import ( "net" )
 		// 		v = net.JoinHostPort(v, origPort)
 		// 	} else {
 		// 		v = net.JoinHostPort(v, "443")
