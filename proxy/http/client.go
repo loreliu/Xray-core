@@ -187,7 +187,12 @@ func fillRequestHeader(ctx context.Context, header []*Header) ([]*Header, error)
 func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, user *protocol.MemoryUser, dialer internet.Dialer, header []*Header, firstPayload []byte) (net.Conn, error) {
 	req := &http.Request{
 		Method: http.MethodConnect,
-		URL:    &url.URL{Host: target},
+		// URL:    &url.URL{Host: target},
+		URL:    &url.URL{Opaque: target},
+		// https://github.com/6Kmfi6HP/x-tunnel/blob/main/internal/app/front_proxy.go#L161
+		// https://pkg.go.dev/net/http#Request.Write
+		// https://cs.opensource.google/go/go/+/refs/tags/go1.20:src/net/http/request.go;l=598;bpv=1
+		// https://pkg.go.dev/net/url#URL
 		Header: make(http.Header),
 		Host:   target,
 	}
